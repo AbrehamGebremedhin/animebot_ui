@@ -1,16 +1,11 @@
-# animebot_ui
+# AnimeBot
 
-A new Flutter project.
+AnimeBot is an Anime Recommendation Chatbot designed to provide personalized anime recommendations using natural language queries. By leveraging graph databases, machine learning, and user preferences, the bot offers a dynamic and engaging way to discover anime titles tailored to individual tastes.
 
-## Getting Started
+## Key Features
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- **Natural Language Understanding**: Users can interact with the bot using conversational queries like, "Recommend me some adventure anime with great character development." The bot interprets these inputs and translates them into structured queries.
+- **Graph-Based Recommendation System**: Powered by Neo4j, the bot organizes anime metadata as nodes and relationships (e.g., genres, themes, characters, studios). Cypher queries retrieve relevant recommendations based on user preferences and query context.
+- **Dynamic User Preference Modeling**: Captures and stores user preferences to refine future recommendations. Learns from interactions to enhance personalization.
+- **Rich Metadata Integration**: Incorporates a wide range of attributes, including genres, ratings, reviews, studios, and airing status.
+- **Ease of Use**: Simple interface, ideal for anime enthusiasts seeking curated recommendations without manual searching.
