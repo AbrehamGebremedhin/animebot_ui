@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:animebot_ui/theme/app_theme.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -22,7 +23,6 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     _loadUserId();
-    _fetchInitialMessage();
   }
 
   Future<void> _loadUserId() async {
@@ -44,7 +44,7 @@ class _ChatPageState extends State<ChatPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.12.208:8000/api/chat/'),
+        Uri.parse('http://192.168.45.208:8000/api/chat/'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'user_id': userId,
@@ -86,7 +86,7 @@ class _ChatPageState extends State<ChatPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.12.208:8000/api/chat/'),
+        Uri.parse('http://192.168.45.208:8000/api/chat/'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'user_id': userId,
@@ -155,15 +155,10 @@ class _ChatPageState extends State<ChatPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Anime Chat"),
-        backgroundColor: Colors.pinkAccent,
+        backgroundColor: AppTheme.secondaryColor,
+        elevation: 0,
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/anime_background.jpg'),
-            fit: BoxFit.cover,
-          ),
-        ),
+      body: AppTheme.backgroundContainer(
         child: Column(
           children: [
             if (_isLoading) const LinearProgressIndicator(),
@@ -188,40 +183,49 @@ class _ChatPageState extends State<ChatPage> {
                 },
               ),
             ),
-            Padding(
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.recommend, color: Colors.tealAccent),
+                    icon: const Icon(Icons.recommend,
+                        color: AppTheme.primaryColor),
                     onPressed: _sendRecommendRequest,
                   ),
                   Expanded(
                     child: TextField(
                       controller: _controller,
+                      style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         hintText: 'Enter your message',
+                        hintStyle:
+                            TextStyle(color: Colors.white.withOpacity(0.6)),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: Colors.black26,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20.0),
-                          borderSide:
-                              BorderSide(color: Colors.black.withOpacity(0.5)),
+                          borderSide: BorderSide.none,
                         ),
                         suffixIcon: IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            _controller.clear();
-                          },
+                          icon: Icon(Icons.clear,
+                              color: Colors.white.withOpacity(0.6)),
+                          onPressed: () => _controller.clear(),
                         ),
                       ),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.send, color: Colors.tealAccent),
+                    icon: const Icon(Icons.send, color: AppTheme.primaryColor),
                     onPressed: () {
-                      _sendMessage(_controller.text);
-                      _controller.clear();
+                      if (_controller.text.isNotEmpty) {
+                        _sendMessage(_controller.text);
+                        _controller.clear();
+                      }
                     },
                   ),
                 ],
@@ -236,42 +240,78 @@ class _ChatPageState extends State<ChatPage> {
   Widget _buildMessage(Map<String, dynamic> message) {
     final isUser = message['isUser'];
     final avatar = isUser ? 'assets/user_avatar.png' : 'assets/bot_avatar.png';
-    final color = isUser ? Colors.blueGrey : Colors.white;
 
-    return Row(
-      mainAxisAlignment:
-          isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-      children: <Widget>[
-        if (!isUser) ...[
-          CircleAvatar(
-            backgroundImage: AssetImage(avatar),
-          ),
-          const SizedBox(width: 10),
-        ],
-        Container(
-          padding: const EdgeInsets.all(10),
-          margin: const EdgeInsets.all(10),
-          constraints: const BoxConstraints(maxWidth: 200),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: Colors.tealAccent.withOpacity(0.5)),
-          ),
-          child: Text(
-            message['text'],
-            style: TextStyle(
-              fontFamily: 'AnimeFont',
-              color: isUser ? Colors.black : Colors.black,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      child: Row(
+        mainAxisAlignment:
+            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          if (!isUser) _buildAvatar(avatar),
+          Expanded(
+            child: Align(
+              alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+              child: Container(
+                margin: EdgeInsets.only(
+                  left: isUser ? 50 : 8,
+                  right: isUser ? 8 : 50,
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isUser
+                      ? AppTheme.primaryColor.withOpacity(0.7)
+                      : Colors.white.withOpacity(0.7),
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(20),
+                    topRight: const Radius.circular(20),
+                    bottomLeft: Radius.circular(isUser ? 20 : 0),
+                    bottomRight: Radius.circular(isUser ? 0 : 20),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  message['text'],
+                  style: TextStyle(
+                    color: isUser ? Colors.white : Colors.black87,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
-        if (isUser) ...[
-          const SizedBox(width: 10),
-          CircleAvatar(
-            backgroundImage: AssetImage(avatar),
+          if (isUser) _buildAvatar(avatar),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar(String path) {
+    return Container(
+      margin: const EdgeInsets.only(top: 4),
+      width: 35,
+      height: 35,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: AppTheme.primaryColor, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
         ],
-      ],
+      ),
+      child: ClipOval(
+        child: Image.asset(path, fit: BoxFit.cover),
+      ),
     );
   }
 

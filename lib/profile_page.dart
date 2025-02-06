@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:animebot_ui/theme/app_theme.dart';
 import 'chat_page.dart';
 
 class ProfileQuestionPage extends StatefulWidget {
@@ -51,7 +52,7 @@ class _ProfileQuestionPageState extends State<ProfileQuestionPage> {
 
     try {
       const String apiUrl =
-          "http://192.168.12.208:8000/api/profile/"; // Replace with your API URL
+          "http://192.168.45.208:8000/api/profile/"; // Replace with your API URL
 
       var request = http.Request('GET', Uri.parse(apiUrl));
       request.headers.addAll({"Content-Type": "application/json"});
@@ -97,7 +98,7 @@ class _ProfileQuestionPageState extends State<ProfileQuestionPage> {
 
     try {
       const String apiUrl =
-          "http://192.168.12.208:8000/api/profile/"; // Replace with your API URL
+          "http://192.168.45.208:8000/api/profile/"; // Replace with your API URL
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {"Content-Type": "application/json"},
@@ -135,112 +136,117 @@ class _ProfileQuestionPageState extends State<ProfileQuestionPage> {
     );
   }
 
+  Widget _buildQuestionCard(Map<String, dynamic> question) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Colors.white.withOpacity(0.9),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+        side: BorderSide(color: AppTheme.primaryColor.withOpacity(0.5)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              question["question"] ?? "",
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (question["type"] == "open-ended")
+              TextFormField(
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: AppTheme.primaryColor),
+                  ),
+                ),
+                onChanged: (value) {
+                  fields[question["var_name"]] = value;
+                },
+              )
+            else if (question["type"] == "multiple-choice")
+              ...question["Options"].map<Widget>((option) {
+                return RadioListTile(
+                  title: Text(option),
+                  value: option,
+                  groupValue: fields[question["var_name"]],
+                  activeColor: AppTheme.primaryColor,
+                  onChanged: (value) {
+                    setState(() {
+                      fields[question["var_name"]] = value as String;
+                    });
+                  },
+                );
+              }).toList(),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Questions: ${ProfileQuestionPage.categoryTitles[currentCategory]}",
-          style: GoogleFonts.pacifico(),
-        ),
-        backgroundColor: Colors.transparent,
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/anime_background.jpg'),
-            fit: BoxFit.cover,
+          ProfileQuestionPage.categoryTitles[currentCategory] ??
+              "Profile Setup",
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
-                children: [
-                  LinearProgressIndicator(
-                    value:
-                        (currentCategoryIndex + 1) / widget.categories.length,
-                    backgroundColor: Colors.grey[300],
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(Colors.blue),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: questions.length,
-                      itemBuilder: (context, index) {
-                        final question = questions[index];
-                        final questionText = question["question"] ?? "";
-                        final questionType = question["type"] ?? "";
-                        final options = question["Options"];
-                        final varName = question["var_name"] ?? "";
-
-                        return Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                questionText,
-                                style: TextStyle(
-                                  color: Colors.teal[
-                                      500], // Equivalent to Colors.teal[900]
-                                  shadows: const [
-                                    Shadow(
-                                      offset: Offset(1.0, 1.0),
-                                      blurRadius: 3.0,
-                                      color: Color.fromARGB(255, 0, 0, 0),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              if (questionType == "open-ended")
-                                TextFormField(
-                                  decoration: InputDecoration(
-                                    labelStyle:
-                                        TextStyle(color: Colors.teal[500]),
-                                    filled: true,
-                                    fillColor: Colors.white.withOpacity(0.5),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                  onChanged: (value) {
-                                    fields[varName] = value;
-                                  },
-                                )
-                              else if (questionType == "multiple-choice")
-                                ...options.map<Widget>((option) {
-                                  return RadioListTile(
-                                    title: Text(option,
-                                        style:
-                                            TextStyle(color: Colors.teal[500])),
-                                    value: option,
-                                    groupValue: fields[varName],
-                                    onChanged: (value) {
-                                      setState(() {
-                                        fields[varName] = value as String;
-                                      });
-                                    },
-                                  );
-                                }).toList(),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+        backgroundColor: AppTheme.secondaryColor,
+        elevation: 0,
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ElevatedButton(
-          onPressed: _submitAnswers,
-          child: Text(currentCategoryIndex < widget.categories.length - 1
-              ? "Next"
-              : "Finish"),
+      body: AppTheme.backgroundContainer(
+        child: Column(
+          children: [
+            LinearProgressIndicator(
+              value: (currentCategoryIndex + 1) / widget.categories.length,
+              backgroundColor: Colors.grey[300],
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+            ),
+            if (isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 100),
+                  itemCount: questions.length,
+                  itemBuilder: (context, index) =>
+                      _buildQuestionCard(questions[index]),
+                ),
+              ),
+          ],
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: isLoading ? null : _submitAnswers,
+        backgroundColor: AppTheme.primaryColor,
+        label: Text(
+          currentCategoryIndex < widget.categories.length - 1
+              ? "Next"
+              : "Finish",
+          style: const TextStyle(color: Colors.black),
+        ),
+        icon: const Icon(Icons.arrow_forward, color: Colors.black),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
